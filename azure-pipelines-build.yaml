@@ -1,0 +1,31 @@
+parameters:
+  - name: job_name
+    type: string
+    default: 'todoapi_build'
+  - name: image_name
+    type: string
+    default: 'glasslewis/todoapi'
+
+jobs:
+  - job: ${{ parameters.job_name }}
+    pool:
+      vmImage: 'ubuntu-latest' 
+
+    steps:
+    - task: Docker@2
+      displayName: 'Build image' 
+      inputs:
+        repository: ${{ parameters.image_name }}
+        command: build
+        Dockerfile: Dockerfile
+
+    - task: Docker@2
+      displayName: 'Push image'
+      inputs:
+        containerRegistry: |
+          dockerHub
+        repository: ${{ parameters.image_name }}
+        command: push
+        tags: |
+          latest
+          $(Build.BuildNumber)

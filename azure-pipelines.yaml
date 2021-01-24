@@ -1,0 +1,29 @@
+name: $(TeamProject)_$(BuildDefinitionName)_$(SourceBranchName)_$(Date:yyyyMMdd)$(Rev:.r)
+resources:
+- repo: self
+
+variables:
+- name: image
+  value: glasslewis/todoapi
+- name: app_name
+  value: todoapi
+
+stages:
+- stage: build_push
+  displayName: 'Build and push image'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+  jobs:
+    - template: ./azure-pipelines-build.yaml
+      parameters:
+        job_name: '${{ variables.app_name }}_build'
+        image_name: ${{ variables.image }}
+        
+- stage: dev_deploy
+  displayName: 'DEV deploy'
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/develop'))
+  jobs:
+    - template: ./azure-pipelines-dev-deploy.yaml
+      parameters:
+        job_name: ${{ variables.app_name }}_dev_deploy
+        target_environment: dev
+        image_name: ${{ variables.image }}

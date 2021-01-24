@@ -1,0 +1,28 @@
+parameters:
+  - name: job_name
+    type: string
+    default: 'dev_deploy'
+  - name: target_environment
+    type: string
+    default: 'dev'
+  - name: image_name
+    type: string
+    default: glasslewis/todoapi
+
+jobs:
+  - deployment: ${{ parameters.job_name }}
+    displayName: ${{ parameters.job_name }}
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: ${{ parameters.target_environment }}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'Web App $(WebApp.Name)'
+            inputs:
+              azureSubscription: '$(Azure.ServiceConnectionId)'
+              appName: $(WebApp.Name)
+              appSettings: -Port 5000 -RequestTimeout 5000 -WEBSITE_TIME_ZONE "GMT Standard Time"
+              imageName: docker.io/${{ parameters.image_name }}:latest
